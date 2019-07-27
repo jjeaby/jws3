@@ -54,7 +54,7 @@ def list_bucket():
     return bucket_list
 
 
-def upload_file(file_name, bucket, object_name=None):
+def upload_file(file_name, bucket, object_name=None, acl=None):
     """Upload a file to an S3 bucket
 
     :param file_name: File to upload
@@ -76,7 +76,11 @@ def upload_file(file_name, bucket, object_name=None):
     # Upload the file
     s3_client = boto3.client('s3')
     try:
-        response = s3_client.upload_file(file_name, bucket, object_name)
+        if acl == 'public':
+            acl_option = {'ACL':'public-read'}
+            response = s3_client.upload_file(file_name, bucket, object_name, ExtraArgs=acl_option)
+        else :
+            response = s3_client.upload_file(file_name, bucket, object_name)
         print(response)
     except ClientError as e:
         logging.error(e)
@@ -116,7 +120,7 @@ def get_all_s3_keys(bucket):
     return keys
 
 
-def get_limit_s3_keys(bucket, NextContinuationToken=None, maxkey=10):
+def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, maxkey=10):
     """Get a list of all keys in an S3 bucket."""
     keys = {}
     keys["keys"] = []
@@ -131,16 +135,23 @@ def get_limit_s3_keys(bucket, NextContinuationToken=None, maxkey=10):
     if NextContinuationToken != None:
         kwargs['ContinuationToken'] = NextContinuationToken
 
+    if search != None:
+        kwargs['Prefix'] = str(search)
+
     resp = s3_client.list_objects_v2(**kwargs)
-    for obj in resp['Contents']:
-        keys["keys"].append(obj['Key'])
 
-    try:
-        keys['NextContinuationToken'] = resp['NextContinuationToken']
-    except KeyError:
-        keys['NextContinuationToken'] = ''
+    if resp != None and 'Contents' in resp:
+        for obj in resp['Contents']:
+            keys["keys"].append(obj['Key'])
 
-    return keys
+        try:
+            keys['NextContinuationToken'] = resp['NextContinuationToken']
+        except KeyError:
+            keys['NextContinuationToken'] = ''
+
+        return keys
+    else :
+        return None
 
 
 if __name__ == '__main__':
@@ -149,7 +160,7 @@ if __name__ == '__main__':
     ret = create_bucket('dailywords', 'ap-northeast-2')
     print("create_bucket:", ret)
 
-    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util.py')
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util.py', acl='public')
     print("upload_file:", ret)
 
     ret = list_files('dailywords')
@@ -158,8 +169,8 @@ if __name__ == '__main__':
     ret = get_all_s3_keys('dailywords')
     print('get_all_s3_keys', ret)
 
-    ret = get_limit_s3_keys('dailywords', maxkey=1)
-    print('get_limit_s3_keys', ret)
+    ret = get_pages_s3_keys('dailywords', maxkey=1, search='*')
+    print('get_pages_s3_keys', ret)
 
-    ret = get_limit_s3_keys('dailywords',NextContinuationToken=ret["NextContinuationToken"], maxkey=1)
-    print('get_limit_s3_keys', ret)
+    ret = get_pages_s3_keys('dailywords', NextContinuationToken=ret["NextContinuationToken"], maxkey=1, search='*')
+    print('get_pages_s3_keys', ret)
