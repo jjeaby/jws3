@@ -1,7 +1,13 @@
 import boto3
 
+bucket_list = []
 
-https://github.com/join?source=header-home
+s3 = boto3.resource('s3')
+for bucket in s3.buckets.all():
+    bucket_list.append(bucket.name)
+
+data = open('test.jpg', 'rb')
+s3.Bucket('my-bucket').put_object(Key='test.jpg', Body=data)
 
 
 # S3 Client 생성
@@ -10,10 +16,12 @@ s3 = boto3.client('s3')
 bucket_name = 'dailywords'
 filename = 'requirements.txt'
 
-
-#s3.create_bucket(Bucket=bucket_name , CreateBucketConfiguration={'LocationConstraint': 'ap-northeast-2'})
+print(bucket_list)
+if bucket_name not in bucket_list:
+    s3.create_bucket(Bucket=bucket_name , CreateBucketConfiguration={'LocationConstraint': 'ap-northeast-2'})
 
 s3.upload_file(filename, bucket_name, filename)
+
 
 
 

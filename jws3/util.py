@@ -77,9 +77,9 @@ def upload_file(file_name, bucket, object_name=None, acl=None):
     s3_client = boto3.client('s3')
     try:
         if acl == 'public':
-            acl_option = {'ACL':'public-read'}
+            acl_option = {'ACL': 'public-read'}
             response = s3_client.upload_file(file_name, bucket, object_name, ExtraArgs=acl_option)
-        else :
+        else:
             response = s3_client.upload_file(file_name, bucket, object_name)
         print(response)
     except ClientError as e:
@@ -120,7 +120,7 @@ def get_all_s3_keys(bucket):
     return keys
 
 
-def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, maxkey=10):
+def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, limit=10):
     """Get a list of all keys in an S3 bucket."""
     keys = {}
     keys["keys"] = []
@@ -129,29 +129,36 @@ def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, maxkey=10
 
     kwargs = {
         'Bucket': bucket,
-        'MaxKeys': maxkey,
-
+        'MaxKeys': 1,
     }
+
     if NextContinuationToken != None:
         kwargs['ContinuationToken'] = NextContinuationToken
 
-    if search != None:
-        kwargs['Prefix'] = str(search)
+    # if search != None:
+    #     kwargs['Prefix'] = str(search)
 
-    resp = s3_client.list_objects_v2(**kwargs)
+    limit_counter = 0
 
-    if resp != None and 'Contents' in resp:
-        for obj in resp['Contents']:
-            keys["keys"].append(obj['Key'])
+    while limit_counter != limit:
+        resp = s3_client.list_objects_v2(**kwargs)
 
-        try:
-            keys['NextContinuationToken'] = resp['NextContinuationToken']
-        except KeyError:
-            keys['NextContinuationToken'] = ''
+        if resp != None and 'Contents' in resp:
+            for obj in resp['Contents']:
 
-        return keys
-    else :
-        return None
+                if 'NextContinuationToken' in resp:
+                    keys['NextContinuationToken'] = resp['NextContinuationToken']
+                    kwargs['ContinuationToken'] = resp['NextContinuationToken']
+                else:
+                    keys['NextContinuationToken'] = ''
+                    kwargs['ContinuationToken'] = ''
+                    break
+
+                if str(obj['Key']).find(search) >= 0:
+                    print(obj)
+                    keys["keys"].append(obj)
+                    limit_counter = limit_counter + 1
+    return keys
 
 
 if __name__ == '__main__':
@@ -163,14 +170,18 @@ if __name__ == '__main__':
     ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util.py', acl='public')
     print("upload_file:", ret)
 
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util2.py', acl='public')
+    print("upload_file:", ret)
+
     ret = list_files('dailywords')
     print('list_files', ret)
 
-    ret = get_all_s3_keys('dailywords')
-    print('get_all_s3_keys', ret)
+    ret = ('dailywords')
+    print('get_allget_all_s3_keys_s3_keys', ret)
 
-    ret = get_pages_s3_keys('dailywords', maxkey=1, search='*')
-    print('get_pages_s3_keys', ret)
+    ret = get_pages_s3_keys('dailywords', limit=1, search='util')
+    print('get_pages_s3_keys_limit=1', ret)
 
-    ret = get_pages_s3_keys('dailywords', NextContinuationToken=ret["NextContinuationToken"], maxkey=1, search='*')
+    # ret = get_pages_s3_keys('dailywords', NextContinuatiounToken=ret["NextContinuationToken"], limit=1, search='.')
+    ret = get_pages_s3_keys('dailywords', limit=2, search='ut')
     print('get_pages_s3_keys', ret)
