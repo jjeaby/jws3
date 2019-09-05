@@ -139,8 +139,9 @@ def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, limit=10)
     #     kwargs['Prefix'] = str(search)
 
     limit_counter = 0
+    counter = 0
 
-    while limit_counter != limit:
+    while limit_counter < limit:
         resp = s3_client.list_objects_v2(**kwargs)
 
         if resp != None and 'Contents' in resp:
@@ -149,15 +150,21 @@ def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, limit=10)
                 if 'NextContinuationToken' in resp:
                     keys['NextContinuationToken'] = resp['NextContinuationToken']
                     kwargs['ContinuationToken'] = resp['NextContinuationToken']
+                    if str(obj['Key']).find(search) >= 0:
+                        keys["keys"].append(obj)
+                        limit_counter = limit_counter + 1
+
+
                 else:
                     keys['NextContinuationToken'] = ''
                     kwargs['ContinuationToken'] = ''
+                    if str(obj['Key']).find(search) >= 0:
+                        keys["keys"].append(obj)
+                        limit_counter = limit_counter + 1
+
                     break
 
-                if str(obj['Key']).find(search) >= 0:
-                    print(obj)
-                    keys["keys"].append(obj)
-                    limit_counter = limit_counter + 1
+
     return keys
 
 
@@ -166,22 +173,23 @@ if __name__ == '__main__':
     # print("delete_bucket:", ret)
     ret = create_bucket('dailywords', 'ap-northeast-2')
     print("create_bucket:", ret)
+    print("-"*100)
 
     ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util.py', acl='public')
     print("upload_file:", ret)
+    print("-"*100)
 
     ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util2.py', acl='public')
     print("upload_file:", ret)
+    print("-"*100)
 
     ret = list_files('dailywords')
     print('list_files', ret)
-
-    ret = ('dailywords')
-    print('get_allget_all_s3_keys_s3_keys', ret)
+    print("-"*100)
 
     ret = get_pages_s3_keys('dailywords', limit=1, search='util')
     print('get_pages_s3_keys_limit=1', ret)
+    print("-"*100)
 
-    # ret = get_pages_s3_keys('dailywords', NextContinuatiounToken=ret["NextContinuationToken"], limit=1, search='.')
-    ret = get_pages_s3_keys('dailywords', limit=2, search='ut')
+    ret = get_pages_s3_keys('dailywords', limit=2, search='util')
     print('get_pages_s3_keys', ret)
