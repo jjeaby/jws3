@@ -175,11 +175,11 @@ if __name__ == '__main__':
     print("create_bucket:", ret)
     print("-"*100)
 
-    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util.py', acl='public')
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/bucket.py', 'dailywords', 'bucket.py', acl='public')
     print("upload_file:", ret)
     print("-"*100)
 
-    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/util.py', 'dailywords', 'util2.py', acl='public')
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/bucket.py', 'dailywords', 'util2.py', acl='public')
     print("upload_file:", ret)
     print("-"*100)
 
@@ -191,5 +191,8 @@ if __name__ == '__main__':
     print('get_pages_s3_keys_limit=1', ret)
     print("-"*100)
 
-    ret = get_pages_s3_keys('dailywords', limit=2, search='util')
+    ret = get_pages_s3_keys('dailywords', limit=2, search='.')
+    print('get_pages_s3_keys', ret)
+
+    ret = get_pages_s3_keys('dailywords', limit=2, search='.', NextContinuationToken=ret['NextContinuationToken'])
     print('get_pages_s3_keys', ret)
