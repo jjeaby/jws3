@@ -40,6 +40,19 @@ def delete_bucket(bucket_name):
         return False
     return True
 
+def delete_file(bucket_name, file=None):
+    try:
+        s3_client = boto3.client('s3')
+        if file != None :
+            s3_client.delete_object(Bucket=bucket_name, Key=file)
+        else :
+            s3_client.Object(bucket_name).delete()
+
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
+
 
 def list_bucket():
     # Retrieve the list of existing buckets
@@ -141,8 +154,12 @@ def get_pages_s3_keys(bucket, NextContinuationToken=None, search=None, limit=10)
     limit_counter = 0
     counter = 0
 
+
     while limit_counter < limit:
-        resp = s3_client.list_objects_v2(**kwargs)
+        try:
+            resp = s3_client.list_objects_v2(**kwargs)
+        except Exception:
+            return False
 
         if resp != None and 'Contents' in resp:
             for obj in resp['Contents']:
@@ -179,7 +196,19 @@ if __name__ == '__main__':
     print("upload_file:", ret)
     print("-"*100)
 
-    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/bucket.py', 'dailywords', 'util2.py', acl='public')
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/bucket.py', 'dailywords', 'bucket2.py', acl='public')
+    print("upload_file:", ret)
+    print("-"*100)
+
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/s3_bucket.py', 'dailywords', 's3_bucket.py', acl='public')
+    print("upload_file:", ret)
+    print("-"*100)
+
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/jws3/s3_bucket.py', 'dailywords', 's3_bucket2.py', acl='public')
+    print("upload_file:", ret)
+    print("-"*100)
+
+    ret = upload_file('/home/jjeaby/Dev/02.jjeaby.github/jws3/requirements.txt', 'dailywords', 'requirements.txt', acl='public')
     print("upload_file:", ret)
     print("-"*100)
 
@@ -187,7 +216,7 @@ if __name__ == '__main__':
     print('list_files', ret)
     print("-"*100)
 
-    ret = get_pages_s3_keys('dailywords', limit=1, search='util')
+    ret = get_pages_s3_keys('dailywords', limit=1, search='s3')
     print('get_pages_s3_keys_limit=1', ret)
     print("-"*100)
 

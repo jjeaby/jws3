@@ -18,9 +18,12 @@ class TestStringMethods(unittest.TestCase):
     #         s.split(2)
 
     def test_delete_item(self):
+        ret = bc.delete_file('dailywords', 'util')
+        self.assertTrue(ret, msg='삭제 실패')
 
-        bc.delete_file('dailywords', )
-        bc.delete_file('dailywords')
+        ret = bc.get_pages_s3_keys('dailywords', limit=1, search='util2.py')
+        self.assertFalse(ret, msg='삭제 실패')
+
 
 
     # ret = bc.create_bucket('dailywords', 'ap-northeast-2')
